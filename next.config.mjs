@@ -37,7 +37,7 @@ const nextConfig = {
 
 const CorsHeaders = [
   { key: "Access-Control-Allow-Credentials", value: "true" },
-  { key: "Access-Control-Allow-Origin", value: "*" },
+  { key: "Access-Control-Allow-Origin", value: "https://llm.yeying.pub" },
   {
     key: "Access-Control-Allow-Methods",
     value: "*",

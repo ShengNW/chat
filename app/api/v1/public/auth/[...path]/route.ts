@@ -20,6 +20,16 @@ async function handle(
   req: NextRequest,
   { params }: { params: { path: string[] } },
 ) {
+  console.log(
+    "[Router Auth Proxy] ROUTER_BACKEND_URL=",
+    ROUTER_BACKEND_URL,
+    "request=",
+    req.url,
+    "origin=",
+    req.headers.get("origin"),
+    "host=",
+    req.headers.get("host"),
+  );
   // 构造原始请求路径
   const requestUrl = new URL(req.url);
   const urlPath = requestUrl.pathname;
@@ -39,7 +49,8 @@ async function handle(
   // 转发请求头（保留 Content-Type、Authorization 等）
   const headers: HeadersInit = {};
   for (const [key, value] of req.headers.entries()) {
-    // 可选：过滤敏感头，但通常直接透传即可
+    // 过滤 hop-by-hop/源站头，避免 TLS/Host 不匹配
+    if (["host", "origin", "referer"].includes(key.toLowerCase())) continue;
     headers[key] = value;
   }
 
