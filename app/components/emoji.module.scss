@@ -4,12 +4,13 @@
   gap: 8px;
   max-width: 100%;
   min-width: 0;
-  padding: 6px 8px;
-  border-radius: 10px;
-  background-color: var(--white);
-  border: var(--border-in-light);
+  padding: 0;
+  border-radius: 0;
+  background-color: transparent;
+  border: none;
   color: var(--black);
   overflow: hidden;
+  font-weight: 400;
 }
 
 .wallet-address {

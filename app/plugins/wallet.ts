@@ -293,6 +293,14 @@ export async function loginWithUcan(
   }
 }
 
+export async function logoutWallet() {
+  localStorage.removeItem("currentAccount");
+  localStorage.removeItem("authToken");
+  await clearUcanSession(UCAN_SESSION_ID);
+  notifySuccess("✅已退出");
+  window.location.reload();
+}
+
 /**
  * 检查 token 是否有效
  * @param token

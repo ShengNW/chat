@@ -21,7 +21,8 @@ import BotIconGrok from "../icons/llm-icons/grok.svg";
 import BotIconHunyuan from "../icons/llm-icons/hunyuan.svg";
 import BotIconDoubao from "../icons/llm-icons/doubao.svg";
 import BotIconChatglm from "../icons/llm-icons/chatglm.svg";
-import React, { useState } from "react";
+import React from "react";
+import { notifyError, notifySuccess } from "../plugins/show_window";
 import styles from "./emoji.module.scss";
 
 export function getEmojiUrl(unified: string, style: EmojiStyle) {
@@ -122,7 +123,6 @@ export function EmojiAvatar(props: { avatar: string; size?: number }) {
 }
 
 export function WalletAccount(props: { address?: string; title?: string }) {
-  const [isCopied, setIsCopied] = useState(false);
   const formatAddress = (addr: string) => {
     if (!addr) return "";
     if (addr.length <= 6 + 4 + 3) return addr;
@@ -134,11 +134,10 @@ export function WalletAccount(props: { address?: string; title?: string }) {
     if (!props.address) return;
     try {
       await navigator.clipboard.writeText(props.address);
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
+      notifySuccess("已复制");
     } catch (err) {
       console.error("复制失败:", err);
-      setIsCopied(false);
+      notifyError("复制失败");
     }
   };
 
@@ -155,7 +154,7 @@ export function WalletAccount(props: { address?: string; title?: string }) {
         className={styles["wallet-copy"]}
         type="button"
       >
-        {isCopied ? "已复制" : "复制"}
+        复制
       </button>
     </div>
   );

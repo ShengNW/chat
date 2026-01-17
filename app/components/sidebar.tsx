@@ -17,6 +17,7 @@ import {
   connectWallet,
   getCurrentAccount,
   isValidUcanAuthorization,
+  logoutWallet,
 } from "../plugins/wallet";
 import { useAppConfig, useChatStore } from "../store";
 import { Avatar } from "./emoji";
@@ -183,8 +184,9 @@ export function SideBarHeader(props: {
   logo?: React.ReactNode;
   children?: React.ReactNode;
   shouldNarrow?: boolean;
+  extra?: React.ReactNode;
 }) {
-  const { title, subTitle, logo, children, shouldNarrow } = props;
+  const { title, subTitle, logo, children, shouldNarrow, extra } = props;
   return (
     <Fragment>
       <div
@@ -200,6 +202,7 @@ export function SideBarHeader(props: {
           </div>
           <div className={styles["sidebar-sub-title"]}>{subTitle}</div>
         </div>
+        {extra && <div className={styles["sidebar-header-extra"]}>{extra}</div>}
       </div>
       {children}
     </Fragment>
@@ -262,7 +265,31 @@ export function SideBar(props: { className?: string }) {
       shouldNarrow={shouldNarrow}
       {...props}
     >
-      <SideBarHeader shouldNarrow={shouldNarrow}>
+      <SideBarHeader
+        shouldNarrow={shouldNarrow}
+        logo={show ? <Avatar avatar={config.avatar} /> : undefined}
+        title={
+          show ? (
+            <WalletAccount
+              address={getCurrentAccount()}
+              title={getCurrentAccount()}
+            />
+          ) : undefined
+        }
+        subTitle={show ? "" : undefined}
+        extra={
+          show ? (
+            <IconButton
+              text="退出"
+              bordered
+              className={styles["sidebar-header-logout"]}
+              onClick={async () => {
+                await logoutWallet();
+              }}
+            />
+          ) : undefined
+        }
+      >
         {!show && (
           <div className={styles["sidebar-header-bar"]}>
             <IconButton
@@ -275,15 +302,6 @@ export function SideBar(props: { className?: string }) {
               onClick={async () => {
                 await connectWallet();
               }}
-            />
-          </div>
-        )}
-        {show && (
-          <div className={styles["sidebar-header-bar"]}>
-            <Avatar avatar={config.avatar} />
-            <WalletAccount
-              address={getCurrentAccount()}
-              title={getCurrentAccount()}
             />
           </div>
         )}
@@ -373,7 +391,6 @@ export function SideBar(props: { className?: string }) {
                 <IconButton
                   aria={Locale.Export.MessageFromChatGPT}
                   icon={<CenterIcon />}
-                  text={shouldNarrow ? undefined : Locale.OWNER_CENTER.MyPage}
                   shadow
                 />
               </Link>
