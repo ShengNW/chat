@@ -20,10 +20,18 @@ async function handle(
   // 构造目标 URL
   const targetUrl = `${WEBDAV_BACKEND_URL}${urlPath}`;
 
-  // 转发请求头（保留 Content-Type、Authorization 等）
+  // 转发请求头（白名单，避免透传敏感头）
+  const ALLOWED_HEADERS = new Set([
+    "authorization",
+    "content-type",
+    "content-length",
+    "accept",
+    "accept-language",
+    "user-agent",
+  ]);
   const headers: HeadersInit = {};
   for (const [key, value] of req.headers.entries()) {
-    // 可选：过滤敏感头，但通常直接透传即可
+    if (!ALLOWED_HEADERS.has(key.toLowerCase())) continue;
     headers[key] = value;
   }
 

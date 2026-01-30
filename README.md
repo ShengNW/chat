@@ -12,6 +12,23 @@ NextChat（chat_UCAN 定制版）
 - UCAN + 钱包登录（可选）
 - Router/WebDAV 代理转发
 
+# 文档索引
+
+- 用户手册（中文）：`docs/user-manual-cn.md`
+- User Manual (EN)：`docs/user-manual-en.md`
+- FAQ（中文）：`docs/faq-cn.md`
+- FAQ (EN)：`docs/faq-en.md`
+- Cloudflare Pages（中文）：`docs/cloudflare-pages-cn.md`
+- Cloudflare Pages (EN)：`docs/cloudflare-pages-en.md`
+- 同步聊天记录（中文）：`docs/synchronise-chat-logs-cn.md`
+- Sync Chat Logs (EN)：`docs/synchronise-chat-logs-en.md`
+- 架构 / 部署 / 安全（中文）：`docs/architecture-cn.md`
+- Architecture / Deployment / Security (EN)：`docs/architecture-en.md`
+- Router/WebDAV 集成（中文）：`docs/router-webdav-integration-cn.md`
+- Router/WebDAV Integration (EN)：`docs/router-webdav-integration-en.md`
+- 部署（中文，Vercel）：`docs/vercel-cn.md`
+- Translation Guide (EN)：`docs/translation.md`
+
 # 环境要求
 
 - Node.js 18+（建议使用 LTS）
@@ -42,7 +59,7 @@ bash scripts/start-all.sh
 
 ## 部署前准备
 
-1) **统一使用 npm 安装依赖**（不要使用 yarn/pnpm）。
+1) **统一使用 npm 安装依赖**。
 2) 配置环境变量（`.env.local`）：
    - `ROUTER_BACKEND_URL`：router 鉴权后端地址  
    - `WEBDAV_BACKEND_URL`：WebDAV 后端地址（**不设会导致 build 失败**）
