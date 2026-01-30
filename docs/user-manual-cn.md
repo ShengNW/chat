@@ -1,8 +1,78 @@
-# 用户手册 User Manual
+# 用户手册
 
-> No english version yet, please read this doc with ChatGPT or other translation tools.
+本文档用于介绍当前系统的整体架构、授权机制以及核心功能。
 
-本文档用于解释 NextChat 的部分功能介绍和设计原则。
+## 系统概览
+
+本系统基于 Next.js（前端）构建，并集成 YeYing 钱包与 `@yeying-community/web3-bs` SDK。鉴权从 SIWE 切换为 UCAN，支持一次授权后同时访问多个后端服务（如 Router 与 WebDAV）。
+
+核心组成：
+
+- 前端：Next.js（本项目）
+- 钱包：YeYing Wallet（EIP-1193）
+- 鉴权：UCAN（Root + Invocation）
+- 后端：Router（OpenAI-compatible）、WebDAV（存储服务）
+
+## 鉴权流程（UCAN）
+
+1. 连接钱包后，前端请求钱包生成 UCAN Session Key。
+2. 使用钱包签名生成 Root UCAN（基于 SIWE 签名），并存入本地。
+3. 发起请求时，生成 Invocation UCAN 并写入 `Authorization: Bearer <UCAN>`。
+
+Root UCAN 可同时用于多个后端服务，Invocation UCAN 会根据目标后端的 `audience` 与 `capabilities` 生成。
+
+## 多后端登录与调用
+
+一次授权后，可同时访问：
+
+- Router：OpenAI-compatible 接口（模型、聊天、用量等）
+- WebDAV：文件/配额相关接口
+
+前端会为不同后端生成不同的 Invocation UCAN，并自动携带授权头。
+
+## 配置项
+
+主要环境变量：
+
+- `WEBDAV_BACKEND_URL`：WebDAV 后端地址
+- `ROUTER_BACKEND_URL`：Router 后端地址
+- `NEXT_PUBLIC_UCAN_RESOURCE`：默认能力 resource（如 `profile`）
+- `NEXT_PUBLIC_UCAN_ACTION`：默认能力 action（如 `read`）
+- `NEXT_PUBLIC_WEBDAV_UCAN_AUD`：WebDAV audience（可选）
+- `NEXT_PUBLIC_ROUTER_UCAN_AUD`：Router audience（可选）
+
+若未指定 `*_UCAN_AUD`，系统会根据后端 URL 自动推导 `did:web:<host>`。
+
+## 本地存储
+
+用于 UCAN 授权的关键本地存储：
+
+- `localStorage`
+  - `currentAccount`：当前钱包地址
+  - `ucanRootExp`：Root UCAN 过期时间（毫秒）
+  - `ucanRootIss`：Root UCAN Issuer
+- `IndexedDB`
+  - DB: `yeying-web3`
+  - Store: `ucan-sessions`（Root UCAN 与 Session 信息）
+
+当 Root UCAN 过期或账户变化时，需要重新授权。
+
+## 运行与端口
+
+开发模式默认端口为 `3020`：
+
+```bash
+npm run dev
+```
+
+生产模式：
+
+```bash
+npm run build
+npm run start
+```
+
+---
 
 ## 面具 (Mask)
 
