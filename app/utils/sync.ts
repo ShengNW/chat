@@ -70,6 +70,29 @@ function mergeDeletedSessions(
   return merged;
 }
 
+function mergeDeletedMessages(
+  localDeleted: Record<string, number> | undefined,
+  remoteDeleted: Record<string, number> | undefined,
+) {
+  const merged: Record<string, number> = {
+    ...(remoteDeleted || {}),
+  };
+  if (localDeleted) {
+    Object.entries(localDeleted).forEach(([id, ts]) => {
+      const current = merged[id] ?? 0;
+      if (ts > current) {
+        merged[id] = ts;
+      }
+    });
+  }
+  const now = Date.now();
+  Object.entries(merged).forEach(([id, ts]) => {
+    if (now - ts > TOMBSTONE_TTL_MS) {
+      delete merged[id];
+    }
+  });
+  return merged;
+}
 type NonFunctionKeys<T> = {
   [K in keyof T]: T[K] extends (...args: any[]) => any ? never : K;
 }[keyof T];
@@ -130,11 +153,32 @@ const MergeStates: StateMerger = {
       remoteState.deletedSessions,
     );
     localState.deletedSessions = mergedDeleted;
+    const mergedDeletedMessages = mergeDeletedMessages(
+      localState.deletedMessages,
+      remoteState.deletedMessages,
+    );
+    localState.deletedMessages = mergedDeletedMessages;
 
     const shouldKeepSession = (session: ChatSession) => {
       const deletedAt = mergedDeleted[session.id];
       if (!deletedAt) return true;
       return deletedAt < session.lastUpdate;
+    };
+
+    const shouldDropMessage = (message: {
+      id?: string;
+      updatedAt?: number;
+    }) => {
+      const messageId = message?.id || "";
+      if (!messageId) return false;
+      const deletedAt = mergedDeletedMessages[messageId];
+      if (!deletedAt) return false;
+      const updatedAt = getMessageUpdatedAt(message);
+      if (updatedAt > deletedAt) {
+        delete mergedDeletedMessages[messageId];
+        return false;
+      }
+      return true;
     };
 
     // merge sessions
@@ -149,12 +193,21 @@ const MergeStates: StateMerger = {
       const localSession = localSessions[remoteSession.id];
       if (!localSession) {
         // if remote session is new, just merge it
-        localState.sessions.push(remoteSession);
+        const nextRemote = {
+          ...remoteSession,
+          messages: remoteSession.messages.filter(
+            (message) => !shouldDropMessage(message),
+          ),
+        };
+        if (nextRemote.messages.length > 0) {
+          localState.sessions.push(nextRemote);
+        }
       } else {
         const localMessageMap = new Map(
           localSession.messages.map((message) => [message.id, message]),
         );
         remoteSession.messages.forEach((remoteMessage) => {
+          if (shouldDropMessage(remoteMessage)) return;
           if (isStreamingMessage(remoteMessage)) return;
           const localMessage = localMessageMap.get(remoteMessage.id);
           if (!localMessage) {
@@ -174,6 +227,10 @@ const MergeStates: StateMerger = {
             Object.assign(localMessage, remoteMessage);
           }
         });
+
+        localSession.messages = localSession.messages.filter(
+          (message) => !shouldDropMessage(message),
+        );
 
         // sort local messages with date field in asc order
         localSession.messages.sort(
@@ -223,6 +280,14 @@ export function getLocalAppState() {
 export function getLocalAppStateForSync() {
   const appState = getLocalAppState();
   const chatState = deepClone(appState[StoreKey.Chat]);
+  const now = Date.now();
+  if (chatState.deletedMessages) {
+    Object.entries(chatState.deletedMessages).forEach(([id, ts]) => {
+      if (now - ts > TOMBSTONE_TTL_MS) {
+        delete chatState.deletedMessages[id];
+      }
+    });
+  }
 
   chatState.sessions = chatState.sessions
     .filter(
@@ -230,10 +295,15 @@ export function getLocalAppStateForSync() {
     )
     .map((session: ChatSession) => ({
       ...session,
-      messages: session.messages.filter(
-        (message) =>
-          !isStreamingMessage(message) && !isEmptyResponseMessage(message),
-      ),
+      messages: session.messages.filter((message) => {
+        if (isStreamingMessage(message) || isEmptyResponseMessage(message)) {
+          return false;
+        }
+        const deletedAt = chatState.deletedMessages?.[message.id] ?? 0;
+        if (!deletedAt) return true;
+        const updatedAt = getMessageUpdatedAt(message);
+        return updatedAt > deletedAt;
+      }),
     }));
 
   return {

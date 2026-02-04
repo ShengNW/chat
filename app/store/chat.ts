@@ -234,6 +234,7 @@ const DEFAULT_CHAT_STATE = {
   currentSessionIndex: 0,
   lastInput: "",
   deletedSessions: {} as Record<string, number>,
+  deletedMessages: {} as Record<string, number>,
 };
 
 export const useChatStore = createPersistStore(
@@ -402,6 +403,22 @@ export const useChatStore = createPersistStore(
           },
           5000,
         );
+      },
+
+      deleteMessage(sessionId: string, messageId: string) {
+        const session = get().sessions.find((item) => item.id === sessionId);
+        if (!session) return;
+        const now = Date.now();
+        get().updateTargetSession(session, (session) => {
+          session.messages = session.messages.filter((m) => m.id !== messageId);
+          session.lastUpdate = now;
+        });
+        set(() => ({
+          deletedMessages: {
+            ...get().deletedMessages,
+            [messageId]: now,
+          },
+        }));
       },
 
       currentSession() {
@@ -912,7 +929,7 @@ export const useChatStore = createPersistStore(
   },
   {
     name: StoreKey.Chat,
-    version: 3.4,
+    version: 3.5,
     migrate(persistedState, version) {
       const state = persistedState as any;
       const newState = JSON.parse(
@@ -978,6 +995,9 @@ export const useChatStore = createPersistStore(
       }
       if (version < 3.4) {
         newState.deletedSessions = {};
+      }
+      if (version < 3.5) {
+        newState.deletedMessages = {};
       }
 
       return newState as any;

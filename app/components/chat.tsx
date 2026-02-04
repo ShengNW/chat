@@ -1251,16 +1251,13 @@ function ChatView() {
     }
   };
 
-  const deleteMessage = (msgId?: string) => {
-    chatStore.updateTargetSession(
-      session,
-      (session) =>
-        (session.messages = session.messages.filter((m) => m.id !== msgId)),
-    );
+  const removeMessage = (messageId?: string) => {
+    if (!messageId) return;
+    chatStore.deleteMessage(session.id, messageId);
   };
 
   const onDelete = (msgId: string) => {
-    deleteMessage(msgId);
+    removeMessage(msgId);
   };
 
   const onResend = (message: ChatMessage) => {
@@ -1308,8 +1305,8 @@ function ChatView() {
     }
 
     // delete the original messages
-    deleteMessage(userMessage.id);
-    deleteMessage(botMessage?.id);
+    removeMessage(userMessage.id);
+    removeMessage(botMessage?.id);
 
     // resend the message
     setIsLoading(true);
