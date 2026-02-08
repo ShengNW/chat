@@ -2,14 +2,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSideConfig } from "@/app/config/server";
 
-const config = getServerSideConfig();
-const WEBDAV_BACKEND_URL = config.web_dav_backend_url;
-
-if (!WEBDAV_BACKEND_URL) {
-  throw new Error("WEBDAV_BACKEND_URL is not set in environment variables");
-}
-
 async function handle(req: NextRequest) {
+  const config = getServerSideConfig();
+  const WEBDAV_BACKEND_URL = config.web_dav_backend_url;
+  if (!WEBDAV_BACKEND_URL) {
+    return NextResponse.json(
+      { error: true, msg: "WEBDAV_BACKEND_URL is not configured" },
+      { status: 500 },
+    );
+  }
   // 构造原始请求路径
   const requestUrl = new URL(req.url);
   const urlPath = requestUrl.pathname;

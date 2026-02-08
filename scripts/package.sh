@@ -13,6 +13,14 @@ SHORT_HASH="$(git -C "${ROOT_DIR}" rev-parse --short=7 HEAD 2>/dev/null || echo 
 PACKAGE_NAME="${PROJECT_NAME}-${TIMESTAMP}-${SHORT_HASH}"
 PACKAGE_DIR="${OUTPUT_DIR}/${PACKAGE_NAME}"
 
+if [ ! -d "${ROOT_DIR}/node_modules" ]; then
+  if [ -f "${ROOT_DIR}/package-lock.json" ]; then
+    npm ci --no-fund --no-audit
+  else
+    npm install --no-fund --no-audit
+  fi
+fi
+
 npm run build
 
 STANDALONE_DIR="${ROOT_DIR}/.next/standalone"

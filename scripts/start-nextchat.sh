@@ -16,7 +16,9 @@ else
 fi
 rm -rf node_modules .next
 git pull
-cp .env.template .env.local
+if [ ! -f .env ] && [ -f .env.template ]; then
+    cp .env.template .env
+fi
 npm install
 npm run build
 PORT=3000 nohup npm start > nextjs.log 2>&1 &

@@ -18,7 +18,7 @@ require_node() {
 
 load_env() {
   local env_template="${ROOT_DIR}/.env.template"
-  local env_file="${ROOT_DIR}/.env.local"
+  local env_file="${ROOT_DIR}/.env"
 
   if [ ! -f "${env_file}" ] && [ -f "${env_template}" ]; then
     cp "${env_template}" "${env_file}"
