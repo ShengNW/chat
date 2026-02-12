@@ -34,13 +34,17 @@ Invocation UCANs are generated per target backend and attached automatically.
 
 Key environment variables:
 
-- `WEBDAV_BACKEND_URL`: WebDAV backend URL
+- `WEBDAV_BACKEND_BASE_URL`: WebDAV base URL (no path)
+- `WEBDAV_BACKEND_PREFIX`: path prefix (default `/dav`, optional to change)
 - `ROUTER_BACKEND_URL`: Router backend URL
 - Shared UCAN caps: fixed to `profile/read`
 - `NEXT_PUBLIC_WEBDAV_UCAN_AUD`: WebDAV audience override (optional)
 - `NEXT_PUBLIC_ROUTER_UCAN_AUD`: Router audience override (optional)
 
 If `*_UCAN_AUD` is not set, the system derives `did:web:<host>` from the backend URL.
+
+Note: `WEBDAV_BACKEND_PREFIX` is only for WebDAV protocol paths (third‑party WebDAV client mounting).
+Quota / SIWE / UCAN HTTP APIs should not include the prefix.
 
 ## Local Storage
 

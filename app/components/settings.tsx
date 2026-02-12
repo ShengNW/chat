@@ -268,6 +268,14 @@ function DangerItems() {
 
 function CheckButton() {
   const syncStore = useSyncStore();
+  const webdavEnvBaseUrl =
+    getClientConfig()?.webdavBackendBaseUrl?.trim() || "";
+  const webdavEnvPrefix =
+    getClientConfig()?.webdavBackendPrefix?.trim() || "";
+  const webdavBaseUrl = syncStore.webdav.baseUrl || webdavEnvBaseUrl;
+  const webdavPrefix = syncStore.webdav.baseUrl.trim()
+    ? syncStore.webdav.prefix
+    : syncStore.webdav.prefix || webdavEnvPrefix;
 
   const couldCheck = useMemo(() => {
     return syncStore.cloudSync();
@@ -309,6 +317,14 @@ function CheckButton() {
 
 function SyncConfigModal(props: { onClose?: () => void }) {
   const syncStore = useSyncStore();
+  const webdavEnvBaseUrl =
+    getClientConfig()?.webdavBackendBaseUrl?.trim() || "";
+  const webdavEnvPrefix =
+    getClientConfig()?.webdavBackendPrefix?.trim() || "";
+  const webdavBaseUrl = syncStore.webdav.baseUrl || webdavEnvBaseUrl;
+  const webdavPrefix = syncStore.webdav.baseUrl.trim()
+    ? syncStore.webdav.prefix
+    : syncStore.webdav.prefix || webdavEnvPrefix;
 
   return (
     <div className="modal-mask">
@@ -397,93 +413,112 @@ function SyncConfigModal(props: { onClose?: () => void }) {
               }}
             ></input>
           </ListItem>
-          {syncStore.useProxy ? (
-            <ListItem
-              title={Locale.Settings.Sync.Config.ProxyUrl.Title}
-              subTitle={Locale.Settings.Sync.Config.ProxyUrl.SubTitle}
-            >
-              <input
-                type="text"
-                value={syncStore.proxyUrl}
-                onChange={(e) => {
-                  syncStore.update(
-                    (config) => (config.proxyUrl = e.currentTarget.value),
-                  );
-                }}
-              ></input>
-            </ListItem>
-          ) : null}
-        </List>
+        {syncStore.useProxy ? (
+          <ListItem
+            title={Locale.Settings.Sync.Config.ProxyUrl.Title}
+            subTitle={Locale.Settings.Sync.Config.ProxyUrl.SubTitle}
+          >
+            <input
+              type="text"
+              value={syncStore.proxyUrl}
+              onChange={(e) => {
+                syncStore.update(
+                  (config) => (config.proxyUrl = e.currentTarget.value),
+                );
+              }}
+            ></input>
+          </ListItem>
+        ) : null}
+      </List>
 
-        {syncStore.provider === ProviderType.WebDAV && (
-          <>
-            <List>
-              <ListItem title="WebDAV Auth">
-                <select
-                  value={syncStore.webdav.authType}
+      <List>
+        <ListItem title="WebDAV Auth">
+          <select
+            value={syncStore.webdav.authType}
+            onChange={(e) => {
+              syncStore.update(
+                (config) =>
+                  (config.webdav.authType = e.target
+                    .value as typeof config.webdav.authType),
+              );
+            }}
+          >
+            <option value="basic">Basic</option>
+            <option value="ucan">UCAN</option>
+          </select>
+        </ListItem>
+      </List>
+
+      {syncStore.provider === ProviderType.WebDAV && (
+        <>
+          <List>
+            <ListItem
+              title={
+                syncStore.webdav.authType === "ucan"
+                  ? "WEBDAV_BACKEND_BASE_URL"
+                    : Locale.Settings.Sync.Config.WebDav.BaseUrl
+                }
+                subTitle={Locale.Settings.Sync.Config.WebDav.BaseUrlSubTitle}
+              >
+                <input
+                  type="text"
+                  value={webdavBaseUrl}
                   onChange={(e) => {
                     syncStore.update(
                       (config) =>
-                        (config.webdav.authType = e.target
-                          .value as typeof config.webdav.authType),
+                        (config.webdav.baseUrl = e.currentTarget.value),
                     );
                   }}
-                >
-                  <option value="basic">Basic</option>
-                  <option value="ucan">UCAN</option>
-                </select>
+                ></input>
               </ListItem>
+              <ListItem
+                title={
+                  syncStore.webdav.authType === "ucan"
+                    ? "WEBDAV_BACKEND_PREFIX"
+                    : Locale.Settings.Sync.Config.WebDav.Prefix
+                }
+                subTitle={Locale.Settings.Sync.Config.WebDav.PrefixSubTitle}
+              >
+                <input
+                  type="text"
+                  placeholder="/dav"
+                  value={webdavPrefix}
+                  onChange={(e) => {
+                    syncStore.update(
+                      (config) =>
+                        (config.webdav.prefix = e.currentTarget.value),
+                    );
+                  }}
+                ></input>
+              </ListItem>
+              {syncStore.webdav.authType === "basic" ? (
+                <>
+                  <ListItem title={Locale.Settings.Sync.Config.WebDav.UserName}>
+                    <input
+                      type="text"
+                      value={syncStore.webdav.username}
+                      onChange={(e) => {
+                        syncStore.update(
+                          (config) =>
+                            (config.webdav.username = e.currentTarget.value),
+                        );
+                      }}
+                    ></input>
+                  </ListItem>
+                  <ListItem title={Locale.Settings.Sync.Config.WebDav.Password}>
+                    <PasswordInput
+                      value={syncStore.webdav.password}
+                      onChange={(e) => {
+                        syncStore.update(
+                          (config) =>
+                            (config.webdav.password = e.currentTarget.value),
+                        );
+                      }}
+                    ></PasswordInput>
+                  </ListItem>
+                </>
+              ) : null}
             </List>
-
-            {syncStore.webdav.authType === "ucan" ? (
-              <List>
-                <ListItem
-                  title="UCAN WebDAV"
-                  subTitle="Use WEBDAV_BACKEND_URL and wallet UCAN authorization."
-                />
-              </List>
-            ) : null}
-
-            {syncStore.webdav.authType === "basic" ? (
-              <List>
-                <ListItem title={Locale.Settings.Sync.Config.WebDav.Endpoint}>
-                  <input
-                    type="text"
-                    value={syncStore.webdav.endpoint}
-                    onChange={(e) => {
-                      syncStore.update(
-                        (config) =>
-                          (config.webdav.endpoint = e.currentTarget.value),
-                      );
-                    }}
-                  ></input>
-                </ListItem>
-
-                <ListItem title={Locale.Settings.Sync.Config.WebDav.UserName}>
-                  <input
-                    type="text"
-                    value={syncStore.webdav.username}
-                    onChange={(e) => {
-                      syncStore.update(
-                        (config) =>
-                          (config.webdav.username = e.currentTarget.value),
-                      );
-                    }}
-                  ></input>
-                </ListItem>
-                <ListItem title={Locale.Settings.Sync.Config.WebDav.Password}>
-                  <PasswordInput
-                    value={syncStore.webdav.password}
-                    onChange={(e) => {
-                      syncStore.update(
-                        (config) =>
-                          (config.webdav.password = e.currentTarget.value),
-                      );
-                    }}
-                  ></PasswordInput>
-                </ListItem>
-              </List>
-            ) : null}
           </>
         )}
 
